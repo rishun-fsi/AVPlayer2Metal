@@ -15,6 +15,9 @@
 		56B60485257AFCD5004B70BC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 56B60483257AFCD5004B70BC /* LaunchScreen.storyboard */; };
 		56B60490257AFCD6004B70BC /* AVPlayer2MetalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56B6048F257AFCD6004B70BC /* AVPlayer2MetalTests.swift */; };
 		56B6049B257AFCD6004B70BC /* AVPlayer2MetalUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56B6049A257AFCD6004B70BC /* AVPlayer2MetalUITests.swift */; };
+		56B604AC257B0089004B70BC /* MetalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56B604AB257B0089004B70BC /* MetalView.swift */; };
+		56B604B4257B0352004B70BC /* ColorKernel.metal in Sources */ = {isa = PBXBuildFile; fileRef = 56B604B3257B0352004B70BC /* ColorKernel.metal */; };
+		56B604C6257B3E10004B70BC /* DefaultShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 56B604C5257B3E10004B70BC /* DefaultShader.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +52,10 @@
 		56B60496257AFCD6004B70BC /* AVPlayer2MetalUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AVPlayer2MetalUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		56B6049A257AFCD6004B70BC /* AVPlayer2MetalUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayer2MetalUITests.swift; sourceTree = "<group>"; };
 		56B6049C257AFCD6004B70BC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		56B604AB257B0089004B70BC /* MetalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalView.swift; sourceTree = "<group>"; };
+		56B604B3257B0352004B70BC /* ColorKernel.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ColorKernel.metal; sourceTree = "<group>"; };
+		56B604C4257B3DE2004B70BC /* ShaderCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderCommon.h; sourceTree = "<group>"; };
+		56B604C5257B3E10004B70BC /* DefaultShader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DefaultShader.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,12 +107,16 @@
 			isa = PBXGroup;
 			children = (
 				56B60478257AFCD4004B70BC /* AppDelegate.swift */,
+				56B604C5257B3E10004B70BC /* DefaultShader.metal */,
 				56B6047A257AFCD4004B70BC /* SceneDelegate.swift */,
 				56B6047C257AFCD4004B70BC /* ViewController.swift */,
+				56B604AB257B0089004B70BC /* MetalView.swift */,
+				56B604B3257B0352004B70BC /* ColorKernel.metal */,
 				56B6047E257AFCD4004B70BC /* Main.storyboard */,
 				56B60481257AFCD5004B70BC /* Assets.xcassets */,
 				56B60483257AFCD5004B70BC /* LaunchScreen.storyboard */,
 				56B60486257AFCD5004B70BC /* Info.plist */,
+				56B604C4257B3DE2004B70BC /* ShaderCommon.h */,
 			);
 			path = AVPlayer2Metal;
 			sourceTree = "<group>";
@@ -258,8 +269,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				56B604AC257B0089004B70BC /* MetalView.swift in Sources */,
+				56B604B4257B0352004B70BC /* ColorKernel.metal in Sources */,
 				56B6047D257AFCD4004B70BC /* ViewController.swift in Sources */,
 				56B60479257AFCD4004B70BC /* AppDelegate.swift in Sources */,
+				56B604C6257B3E10004B70BC /* DefaultShader.metal in Sources */,
 				56B6047B257AFCD4004B70BC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -439,11 +453,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N5L9MA285S;
 				INFOPLIST_FILE = AVPlayer2Metal/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = lisyunn.sample.AVPlayer2Metal;
+				PRODUCT_BUNDLE_IDENTIFIER = lisyunn.test.AVPlayer2Metal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -458,11 +473,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N5L9MA285S;
 				INFOPLIST_FILE = AVPlayer2Metal/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = lisyunn.sample.AVPlayer2Metal;
+				PRODUCT_BUNDLE_IDENTIFIER = lisyunn.test.AVPlayer2Metal;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
