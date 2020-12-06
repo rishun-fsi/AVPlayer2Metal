@@ -9,18 +9,22 @@ import MetalKit
 import CoreVideo
  
 final class MetalView: MTKView {
-    
-    var inputTime: CFTimeInterval?
      
     var pixelBuffer: CVPixelBuffer? {
         didSet {
             setNeedsDisplay()
         }
     }
+    
+    private struct VertexData {
+        let pos: simd_float4
+        let texCoords: simd_float2
+    }
      
     private var textureCache: CVMetalTextureCache?
     private var commandQueue: MTLCommandQueue
-    private var computePipelineState: MTLComputePipelineState
+    private var renderPipelineState: MTLRenderPipelineState
+    private var verticesBuffer: MTLBuffer!
     
     required init(coder: NSCoder) {
      
@@ -35,12 +39,34 @@ final class MetalView: MTKView {
         let url = bundle.url(forResource: "default", withExtension: "metallib")
         let library = try! metalDevice.makeLibrary(filepath: url!.path)
      
+        
+        let pipelineDescriptor = MTLRenderPipelineDescriptor()
+        pipelineDescriptor.label = "DisplayRenderPass Pipeline"
         // Create a function with a specific name.
-        let function = library.makeFunction(name: "colorKernel")!
-     
-        // Create a compute pipeline with the above function.
-        self.computePipelineState = try! metalDevice.makeComputePipelineState(function: function)
-     
+        pipelineDescriptor.vertexFunction =  library.makeFunction(name: "defaultVertexShader")
+        pipelineDescriptor.fragmentFunction = library.makeFunction(name: "defaultFragmentShader")
+        pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+        
+        // Create a  pipeline with the above function.
+        self.renderPipelineState = try! metalDevice.makeRenderPipelineState(descriptor: pipelineDescriptor)
+      
+        
+        let vertices: [VertexData] = [
+            VertexData(pos: simd_float4(x: -1, y: -1, z: 0, w: 1),
+                       texCoords: simd_float2(x: 0, y: 1)),
+            VertexData(pos: simd_float4(x: 1, y: -1, z: 0, w: 1),
+                       texCoords: simd_float2(x: 1, y: 1)),
+            VertexData(pos: simd_float4(x: -1, y: 1, z: 0, w: 1),
+                       texCoords: simd_float2(x: 0, y: 0)),
+            VertexData(pos: simd_float4(x: 1, y: 1, z: 0, w: 1),
+                       texCoords: simd_float2(x: 1, y: 0)),
+            ]
+        self.verticesBuffer = metalDevice.makeBuffer(
+            bytes: vertices,
+            length: MemoryLayout<VertexData>.stride * vertices.count,
+            options: [])
+        
+        
         // Initialize the cache to convert the pixel buffer into a Metal texture.
         var textCache: CVMetalTextureCache?
         if CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, metalDevice, nil, &textCache) != kCVReturnSuccess {
@@ -99,28 +125,52 @@ final class MetalView: MTKView {
      
         // Create a command buffer
         guard let commandBuffer = commandQueue.makeCommandBuffer() else { return }
-     
-        // Create a compute command encoder.
-        guard let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder() else {
+        
+        let renderPassDescriptor = MTLRenderPassDescriptor()
+        renderPassDescriptor.colorAttachments[0].texture = drawable.texture
+//        renderPassDescriptor.colorAttachments[0].loadAction = .dontCare
+//        renderPassDescriptor.colorAttachments[0].storeAction = .store
+//        renderPassDescriptor.colorAttachments[0].clearColor =
+//            MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+
+        
+        // Create a render command encoder.
+        guard let renderCommandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else {
             return
         }
-     
-        // Set the compute pipeline state for the command encoder.
-        computeCommandEncoder.setComputePipelineState(computePipelineState)
-     
-        // Set the input and output textures for the compute shader.
-        computeCommandEncoder.setTexture(inputTexture, index: 0)
-        computeCommandEncoder.setTexture(drawable.texture, index: 1)
-     
-        // Convert the time in a metal buffer.
-        var time = Float(self.inputTime!)
-        computeCommandEncoder.setBytes(&time, length: MemoryLayout<Float>.size, index: 0)
-     
-        // Encode a threadgroup's execution of a compute function
-        computeCommandEncoder.dispatchThreadgroups(inputTexture.threadGroups(), threadsPerThreadgroup: inputTexture.threadGroupCount())
+        
+        renderCommandEncoder.setViewport(MTLViewport(
+            originX: 0.0, originY: 0.0,
+            width: Double(drawableSize.width), height: Double(drawableSize.height),
+            znear: -1.0, zfar: 1.0))
+        
+        do {
+            var texCoordsScales = simd_float2(x: 1, y: 1)
+            var scaleFactor = drawableSize.width / CGFloat(inputTexture.width)
+            let textureFitHeight = CGFloat(inputTexture.height) * scaleFactor
+            if textureFitHeight > drawableSize.height {
+                scaleFactor = drawableSize.height / CGFloat(inputTexture.height)
+                let textureFitWidth = CGFloat(inputTexture.width) * scaleFactor
+                let texCoordsScaleX = textureFitWidth / drawableSize.width
+                texCoordsScales.x = Float(texCoordsScaleX)
+            } else {
+                let texCoordsScaleY = textureFitHeight / drawableSize.height
+                texCoordsScales.y = Float(texCoordsScaleY)
+            }
+            
+            renderCommandEncoder.setFragmentBytes(&texCoordsScales,
+                                                  length: MemoryLayout<simd_float2>.stride,
+                                                  index: 0)
+            
+            renderCommandEncoder.setFragmentTexture(inputTexture, index: 0)
+        }
+        
+        renderCommandEncoder.setRenderPipelineState(renderPipelineState)
+        renderCommandEncoder.setVertexBuffer(self.verticesBuffer, offset: 0, index: 0)
+        renderCommandEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
      
         // End the encoding of the command.
-        computeCommandEncoder.endEncoding()
+        renderCommandEncoder.endEncoding()
      
         // Register the current drawable for rendering.
         commandBuffer.present(drawable)
@@ -137,16 +187,4 @@ final class MetalView: MTKView {
         }
     }
  
-}
-
-extension MTLTexture {
- 
-    func threadGroupCount() -> MTLSize {
-        return MTLSizeMake(8, 8, 1)
-    }
- 
-    func threadGroups() -> MTLSize {
-        let groupCount = threadGroupCount()
-        return MTLSizeMake(Int(self.width) / groupCount.width, Int(self.height) / groupCount.height, 1)
-    }
 }

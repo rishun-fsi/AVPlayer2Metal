@@ -72,10 +72,7 @@ class ViewController: UIViewController {
      
         if playerItemVideoOutput.hasNewPixelBuffer(forItemTime: currentTime), let pixelBuffer = playerItemVideoOutput.copyPixelBuffer(forItemTime: currentTime, itemTimeForDisplay: nil) {
             self.metalView.pixelBuffer = pixelBuffer
-            self.metalView.inputTime = currentTime.seconds
-            
             self.metalView2.pixelBuffer = pixelBuffer
-            self.metalView2.inputTime = currentTime.seconds
         }
     }
     
